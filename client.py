@@ -16,8 +16,8 @@ def receive_command(sock, expected_command):
     return response
 
 def send_confirmation(sock, confirmation_message):
-    # Modify the confirmation message based on server's expectation
-    sock.sendall(confirmation_message + b'\r\n')
+    # Directly send the confirmation message including '\r\n'
+    sock.sendall(confirmation_message)
 
 def send_file(sock, filename):
     with open(filename, 'rb') as file:
@@ -31,6 +31,7 @@ def send_file(sock, filename):
                 raise TimeoutError("Timeout while sending file data")
             except socket.error as e:
                 raise socket.error(f"Socket error during file transmission: {e}")
+
 def main(hostname, port, filename):
     try:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -69,3 +70,4 @@ if __name__ == "__main__":
         sys.exit(1)
 
     main(sys.argv[1], sys.argv[2], sys.argv[3])
+
