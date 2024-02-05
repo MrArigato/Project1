@@ -10,25 +10,18 @@ def receive_command(sock, expected_command):
         response += data
     if response != expected_command:
         raise ValueError(f"Unexpected response from server: {response}")
-    print(f"Received command: {response.decode()}")
     return response
 
 def send_confirmation(sock, confirmation_message):
     sock.sendall(confirmation_message)
-    print(f"Sent confirmation: {confirmation_message.decode()}")
 
 def send_file(sock, filename):
-    try:
-        with open(filename, 'rb') as file:
-            while True:
-                chunk = file.read(10000)
-                if not chunk:
-                    break
-                sock.sendall(chunk)
-        print(f"File {filename} transferred successfully")
-    except FileNotFoundError:
-        sys.stderr.write(f"ERROR: File {filename} not found\n")
-        sys.exit(1)
+    with open(filename, 'rb') as file:
+        while True:
+            chunk = file.read(10000)
+            if not chunk:
+                break
+            sock.sendall(chunk)
 
 def main(hostname, port, filename):
     if len(sys.argv) != 4:
@@ -40,9 +33,9 @@ def main(hostname, port, filename):
             s.settimeout(10)
             s.connect((hostname, int(port)))
 
+            # Ensure correct sequence of commands and responses
             receive_command(s, b'accio\r\n')
             send_confirmation(s, b'confirm-accio\r\n')
-
             receive_command(s, b'accio\r\n')
             send_confirmation(s, b'confirm-accio-again\r\n')
 
