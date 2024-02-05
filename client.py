@@ -39,11 +39,11 @@ def main(hostname, port, filename):
 
             # First 'accio\r\n' command from the server and response
             receive_command(s, b'accio\r\n')
-            send_confirmation(s, b'confirm-accio')
+            send_confirmation(s, b'confirm-accio\r\n')
 
             # Second 'accio\r\n' command from the server and response
             receive_command(s, b'accio\r\n')
-            send_confirmation(s, b'confirm-accio-again')
+            send_confirmation(s, b'confirm-accio-again\r\n\r\n')
 
             # File Transfer
             send_file(s, filename)
