@@ -16,6 +16,7 @@ def receive_command(sock, expected_command):
     return response
 
 def send_confirmation(sock, confirmation_message):
+    # Modify the confirmation message based on server's expectation
     sock.sendall(confirmation_message + b'\r\n')
 
 def send_file(sock, filename):
@@ -39,9 +40,9 @@ def main(hostname, port, filename):
 
             # Receive and confirm two 'accio\r\n' commands from the server
             receive_command(s, b'accio\r\n')
-            send_confirmation(s, b'confirm-accio')
+            send_confirmation(s, b'correct-header-1')  # Adjust based on server requirement
             receive_command(s, b'accio\r\n')
-            send_confirmation(s, b'confirm-accio-again')
+            send_confirmation(s, b'correct-header-2')  # Adjust based on server requirement
 
             # File Transfer
             send_file(s, filename)
