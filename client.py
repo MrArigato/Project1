@@ -10,18 +10,25 @@ def receive_command(sock, expected_command):
         response += data
     if response != expected_command:
         raise ValueError(f"Unexpected response from server: {response}")
+    print(f"Received command: {response.decode()}")
     return response
 
 def send_confirmation(sock, confirmation_message):
     sock.sendall(confirmation_message)
+    print(f"Sent confirmation: {confirmation_message.decode()}")
 
 def send_file(sock, filename):
-    with open(filename, 'rb') as file:
-        while True:
-            chunk = file.read(10000)
-            if not chunk:
-                break
-            sock.sendall(chunk)
+    try:
+        with open(filename, 'rb') as file:
+            while True:
+                chunk = file.read(10000)
+                if not chunk:
+                    break
+                sock.sendall(chunk)
+        print(f"File {filename} transferred successfully")
+    except FileNotFoundError:
+        sys.stderr.write(f"ERROR: File {filename} not found\n")
+        sys.exit(1)
 
 def main(hostname, port, filename):
     if len(sys.argv) != 4:
@@ -33,17 +40,12 @@ def main(hostname, port, filename):
             s.settimeout(10)
             s.connect((hostname, int(port)))
 
-            # Wait for first 'accio\r\n' command from the server
             receive_command(s, b'accio\r\n')
-            # Send first confirmation
             send_confirmation(s, b'confirm-accio\r\n')
 
-            # Wait for second 'accio\r\n' command from the server
             receive_command(s, b'accio\r\n')
-            # Send second confirmation
             send_confirmation(s, b'confirm-accio-again\r\n')
 
-            # File Transfer
             send_file(s, filename)
 
     except socket.gaierror:
@@ -61,8 +63,6 @@ def main(hostname, port, filename):
     except Exception as e:
         sys.stderr.write(f"ERROR: Unexpected error: {e}\n")
         sys.exit(1)
-    else:
-        print("File transfer completed successfully")
 
 if __name__ == "__main__":
     main(sys.argv[1], sys.argv[2], sys.argv[3])
