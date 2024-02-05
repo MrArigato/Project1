@@ -1,16 +1,19 @@
 import socket
 import sys
 
-def send_and_receive(sock, send_message, expected_response):
-    sock.sendall(send_message)
+def receive_command(sock, expected_command):
     response = b''
     while not response.endswith(b'\r\n'):
         data = sock.recv(1)
         if not data:
             raise ConnectionError("Server closed the connection")
         response += data
-    if not response == expected_response:
+    if response != expected_command:
         raise ValueError(f"Unexpected response from server: {response}")
+    return response
+
+def send_confirmation(sock, confirmation_message):
+    sock.sendall(confirmation_message)
 
 def send_file(sock, filename):
     with open(filename, 'rb') as file:
@@ -30,11 +33,17 @@ def main(hostname, port, filename):
             s.settimeout(10)
             s.connect((hostname, int(port)))
 
-            # First accio command
-            send_and_receive(s, b'confirm-accio\r\n', b'accio\r\n')
-            # Second accio command
-            send_and_receive(s, b'confirm-accio-again\r\n', b'accio\r\n')
+            # Wait for first 'accio\r\n' command from the server
+            receive_command(s, b'accio\r\n')
+            # Send first confirmation
+            send_confirmation(s, b'confirm-accio\r\n')
 
+            # Wait for second 'accio\r\n' command from the server
+            receive_command(s, b'accio\r\n')
+            # Send second confirmation
+            send_confirmation(s, b'confirm-accio-again\r\n')
+
+            # File Transfer
             send_file(s, filename)
 
     except socket.gaierror:
