@@ -22,6 +22,7 @@ def send_file(sock, filename):
             if not chunk:
                 break
             sock.sendall(chunk)
+    # Consider adding a termination signal or closing the socket if the protocol requires it.
 
 def main(hostname, port, filename):
     if len(sys.argv) != 4:
@@ -33,7 +34,6 @@ def main(hostname, port, filename):
             s.settimeout(10)
             s.connect((hostname, int(port)))
 
-            # Ensure correct sequence of commands and responses
             receive_command(s, b'accio\r\n')
             send_confirmation(s, b'confirm-accio\r\n')
             receive_command(s, b'accio\r\n')
@@ -56,6 +56,9 @@ def main(hostname, port, filename):
     except Exception as e:
         sys.stderr.write(f"ERROR: Unexpected error: {e}\n")
         sys.exit(1)
+    else:
+        print("File transfer completed successfully")
 
 if __name__ == "__main__":
     main(sys.argv[1], sys.argv[2], sys.argv[3])
+
