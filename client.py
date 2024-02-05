@@ -30,10 +30,6 @@ def send_file(sock, filename):
                 raise TimeoutError("Timeout while sending file data")
 
 def main(hostname, port, filename):
-    if len(sys.argv) != 4:
-        sys.stderr.write("ERROR: Incorrect usage. Expected format: python3 client.py <HOSTNAME-OR-IP> <PORT> <FILENAME>\n")
-        sys.exit(1)
-
     try:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.settimeout(10)
@@ -66,6 +62,8 @@ def main(hostname, port, filename):
         sys.exit(1)
 
 if __name__ == "__main__":
-    main(sys.argv[1], sys.argv[2], sys.argv[3])
-if __name__ == "__main__":
+    if len(sys.argv) != 4:
+        sys.stderr.write("ERROR: Incorrect usage. Expected format: python3 client.py <HOSTNAME-OR-IP> <PORT> <FILENAME>\n")
+        sys.exit(1)
+
     main(sys.argv[1], sys.argv[2], sys.argv[3])
