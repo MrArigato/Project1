@@ -28,6 +28,8 @@ def send_file(sock, filename):
                 sock.sendall(chunk)
             except socket.timeout:
                 raise TimeoutError("Timeout while sending file data")
+            except socket.error as e:
+                raise socket.error(f"Socket error during file transmission: {e}")
 
 def main(hostname, port, filename):
     try:
@@ -36,9 +38,10 @@ def main(hostname, port, filename):
             s.connect((hostname, int(port)))
 
             # Receive and confirm two 'accio\r\n' commands from the server
-            for _ in range(2):
-                receive_command(s, b'accio\r\n')
-                send_confirmation(s, b'confirm-accio')
+            receive_command(s, b'accio\r\n')
+            send_confirmation(s, b'confirm-accio')
+            receive_command(s, b'accio\r\n')
+            send_confirmation(s, b'confirm-accio-again')
 
             # File Transfer
             send_file(s, filename)
@@ -49,9 +52,14 @@ def main(hostname, port, filename):
     except (socket.gaierror, ConnectionError, TimeoutError) as e:
         sys.stderr.write(f"ERROR: {e}\n")
         sys.exit(1)
+    except socket.error as e:
+        sys.stderr.write(f"ERROR: Socket error: {e}\n")
+        sys.exit(1)
     except Exception as e:
         sys.stderr.write(f"ERROR: Unexpected error: {e}\n")
         sys.exit(1)
+    else:
+        sys.exit(0)
 
 if __name__ == "__main__":
     if len(sys.argv) != 4:
