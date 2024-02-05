@@ -35,27 +35,19 @@ def main(hostname, port, filename):
             s.settimeout(10)
             s.connect((hostname, int(port)))
 
-            # First 'accio\r\n' command from the server
-            receive_command(s, b'accio\r\n')
-            # Send first confirmation
-            send_confirmation(s, b'confirm-accio')
-
-            # Second 'accio\r\n' command from the server
-            receive_command(s, b'accio\r\n')
-            # Send second confirmation
-            send_confirmation(s, b'confirm-accio-again')
+            # Receive and confirm two 'accio\r\n' commands from the server
+            for _ in range(2):
+                receive_command(s, b'accio\r\n')
+                send_confirmation(s, b'confirm-accio')
 
             # File Transfer
             send_file(s, filename)
 
-    except (socket.gaierror, ValueError):
-        sys.stderr.write("ERROR: Invalid hostname, port, or unexpected response from server\n")
-        sys.exit(1)
-    except TimeoutError as e:
+    except ValueError as e:
         sys.stderr.write(f"ERROR: {e}\n")
         sys.exit(1)
-    except socket.error as e:
-        sys.stderr.write(f"ERROR: Socket error: {e}\n")
+    except (socket.gaierror, ConnectionError, TimeoutError) as e:
+        sys.stderr.write(f"ERROR: {e}\n")
         sys.exit(1)
     except Exception as e:
         sys.stderr.write(f"ERROR: Unexpected error: {e}\n")
