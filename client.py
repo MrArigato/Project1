@@ -31,22 +31,23 @@ def send_file(sock, filename):
                 raise TimeoutError("Timeout while sending file data")
             except socket.error as e:
                 raise socket.error(f"Socket error during file transmission: {e}")
-
 def main(hostname, port, filename):
     try:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.settimeout(10)
             s.connect((hostname, int(port)))
 
-            # Receive and confirm two 'accio\r\n' commands from the server
+            # First 'accio\r\n' command from the server and response
             receive_command(s, b'accio\r\n')
-            send_confirmation(s, b'correct-header-1')  # Adjust based on server requirement
+            send_confirmation(s, b'confirm-accio')
+
+            # Second 'accio\r\n' command from the server and response
             receive_command(s, b'accio\r\n')
-            send_confirmation(s, b'correct-header-2')  # Adjust based on server requirement
+            send_confirmation(s, b'confirm-accio-again')
 
             # File Transfer
             send_file(s, filename)
-
+            
     except ValueError as e:
         sys.stderr.write(f"ERROR: {e}\n")
         sys.exit(1)
