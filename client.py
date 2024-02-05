@@ -10,9 +10,10 @@ def receive_command(sock, expected_command):
         response += data
     if response != expected_command:
         raise ValueError(f"Unexpected response from server: {response}")
+    return response
 
 def send_confirmation(sock, confirmation_message):
-    sock.sendall(confirmation_message)
+    sock.sendall(confirmation_message + b'\r\n')
 
 def send_file(sock, filename):
     with open(filename, 'rb') as file:
@@ -32,11 +33,17 @@ def main(hostname, port, filename):
             s.settimeout(10)
             s.connect((hostname, int(port)))
 
+            # First 'accio\r\n' command from the server
             receive_command(s, b'accio\r\n')
-            send_confirmation(s, b'confirm-accio\r\n')
-            receive_command(s, b'accio\r\n')
-            send_confirmation(s, b'confirm-accio-again\r\n')
+            # Send first confirmation
+            send_confirmation(s, b'confirm-accio')
 
+            # Second 'accio\r\n' command from the server
+            receive_command(s, b'accio\r\n')
+            # Send second confirmation
+            send_confirmation(s, b'confirm-accio-again')
+
+            # File Transfer
             send_file(s, filename)
 
     except socket.gaierror:
@@ -54,9 +61,6 @@ def main(hostname, port, filename):
     except Exception as e:
         sys.stderr.write(f"ERROR: Unexpected error: {e}\n")
         sys.exit(1)
-    else:
-        print("File transfer completed successfully")
 
 if __name__ == "__main__":
     main(sys.argv[1], sys.argv[2], sys.argv[3])
-
