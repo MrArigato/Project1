@@ -5,9 +5,9 @@ import os
 def receive_command(sock, expected_command):
     data_received = b''
     while not data_received.endswith(expected_command):
-        data = sock.recv(1)  # Receive data one byte at a time
+        data = sock.recv(1)
         if not data:
-            raise Exception("Connection closed by server")
+            raise Exception("Connection closed by the server")
         data_received += data
     return data_received
 
@@ -17,27 +17,28 @@ def send_confirmation(sock, message):
 def send_file(sock, filename):
     with open(filename, 'rb') as file:
         while True:
-            chunk = file.read(10000)  # Read file in chunks of 10000 bytes
+            chunk = file.read(10000)
             if not chunk:
-                break  # End of file
+                break
             sock.sendall(chunk)
 
 def main(hostname, port, filename):
     try:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            s.settimeout(10)  # Set timeout for connection and operations
+            s.settimeout(10)
             s.connect((hostname, int(port)))
 
-            # Protocol Communication
             receive_command(s, b'accio\r\n')
             send_confirmation(s, b'confirm-accio\r\n')
             receive_command(s, b'accio\r\n')
             send_confirmation(s, b'confirm-accio-again\r\n\r\n')
 
-            # File Transfer
             send_file(s, filename)
 
-    except (socket.timeout, socket.error) as e:
+    except socket.gaierror:
+        sys.stderr.write("ERROR: Invalid hostname or unable to resolve hostname\n")
+        sys.exit(1)
+    except socket.error as e:
         sys.stderr.write(f"ERROR: {e}\n")
         sys.exit(1)
     except Exception as e:
