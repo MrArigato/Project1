@@ -10,7 +10,6 @@ def receive_command(sock, expected_command):
         response += data
     if response != expected_command:
         raise ValueError(f"Unexpected response from server: {response}")
-    return response
 
 def send_confirmation(sock, confirmation_message):
     sock.sendall(confirmation_message)
@@ -22,7 +21,6 @@ def send_file(sock, filename):
             if not chunk:
                 break
             sock.sendall(chunk)
-    # Consider adding a termination signal or closing the socket if the protocol requires it.
 
 def main(hostname, port, filename):
     if len(sys.argv) != 4:
