@@ -31,8 +31,7 @@ def send_file(sock, filename):
 
 def main(hostname, port, filename):
     if len(sys.argv) != 4:
-        error_message = "ERROR: Incorrect usage. Expected format: python3 client.py <HOSTNAME-OR-IP> <PORT> <FILENAME>\n"
-        sys.stderr.write(error_message.encode())
+        sys.stderr.write("ERROR: Incorrect usage. Expected format: python3 client.py <HOSTNAME-OR-IP> <PORT> <FILENAME>\n")
         sys.exit(1)
 
     try:
@@ -53,21 +52,17 @@ def main(hostname, port, filename):
             # File Transfer
             send_file(s, filename)
 
-    except (socket.gaierror, ValueError) as e:
-        error_message = f"ERROR: {e}\n"
-        sys.stderr.write(error_message.encode())
+    except (socket.gaierror, ValueError):
+        sys.stderr.write("ERROR: Invalid hostname, port, or unexpected response from server\n")
         sys.exit(1)
     except TimeoutError as e:
-        error_message = f"ERROR: {e}\n"
-        sys.stderr.write(error_message.encode())
+        sys.stderr.write(f"ERROR: {e}\n")
         sys.exit(1)
     except socket.error as e:
-        error_message = f"ERROR: Socket error: {e}\n"
-        sys.stderr.write(error_message.encode())
+        sys.stderr.write(f"ERROR: Socket error: {e}\n")
         sys.exit(1)
     except Exception as e:
-        error_message = f"ERROR: Unexpected error: {e}\n"
-        sys.stderr.write(error_message.encode())
+        sys.stderr.write(f"ERROR: Unexpected error: {e}\n")
         sys.exit(1)
 
 if __name__ == "__main__":
