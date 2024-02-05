@@ -25,7 +25,11 @@ def main(hostname, port, filename):
         # Establishing Connection
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.settimeout(10)
-            s.connect((hostname, int(port)))
+            try:
+                s.connect((hostname, int(port)))
+            except socket.gaierror:
+                sys.stderr.write("ERROR: Invalid hostname or unable to resolve hostname\n")
+                sys.exit(1)
 
             # Protocol Communication
             send_and_receive(s, b'confirm-accio\r\n', b'accio\r\n')
@@ -34,9 +38,6 @@ def main(hostname, port, filename):
             # File Transfer
             send_file(s, filename)
 
-    except socket.gaierror:
-        sys.stderr.write("ERROR: Invalid hostname or unable to resolve hostname\n")
-        sys.exit(1)
     except socket.timeout:
         sys.stderr.write("ERROR: Connection to the server timed out\n")
         sys.exit(1)
@@ -57,4 +58,3 @@ if __name__ == "__main__":
         sys.stderr.write("ERROR: Usage: python3 client.py <HOSTNAME-OR-IP> <PORT> <FILENAME>\n")
         sys.exit(1)
     main(sys.argv[1], sys.argv[2], sys.argv[3])
-
