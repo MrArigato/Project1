@@ -4,10 +4,13 @@ import sys
 def receive_command(sock, expected_command):
     response = b''
     while not response.endswith(b'\r\n'):
-        data = sock.recv(1)
-        if not data:
-            raise ConnectionError("Server closed the connection")
-        response += data
+        try:
+            data = sock.recv(1)
+            if not data:
+                raise ConnectionError("Server closed the connection")
+            response += data
+        except socket.timeout:
+            raise TimeoutError("Timeout while waiting for server command")
     if response != expected_command:
         raise ValueError(f"Unexpected response from server: {response}")
     return response
@@ -21,11 +24,14 @@ def send_file(sock, filename):
             chunk = file.read(10000)
             if not chunk:
                 break
-            sock.sendall(chunk)
+            try:
+                sock.sendall(chunk)
+            except socket.timeout:
+                raise TimeoutError("Timeout while sending file data")
 
 def main(hostname, port, filename):
     if len(sys.argv) != 4:
-        sys.stderr.write("ERROR: Usage: python3 client.py <HOSTNAME-OR-IP> <PORT> <FILENAME>\n")
+        sys.stderr.write("ERROR: Incorrect usage. Expected format: python3 client.py <HOSTNAME-OR-IP> <PORT> <FILENAME>\n")
         sys.exit(1)
 
     try:
@@ -46,17 +52,14 @@ def main(hostname, port, filename):
             # File Transfer
             send_file(s, filename)
 
-    except socket.gaierror:
-        sys.stderr.write("ERROR: Invalid hostname or unable to resolve hostname\n")
+    except (socket.gaierror, ValueError):
+        sys.stderr.write("ERROR: Invalid hostname, port, or unexpected response from server\n")
         sys.exit(1)
-    except socket.timeout:
-        sys.stderr.write("ERROR: Connection to the server timed out\n")
+    except TimeoutError as e:
+        sys.stderr.write(f"ERROR: {e}\n")
         sys.exit(1)
     except socket.error as e:
         sys.stderr.write(f"ERROR: Socket error: {e}\n")
-        sys.exit(1)
-    except ValueError as e:
-        sys.stderr.write(f"ERROR: {e}\n")
         sys.exit(1)
     except Exception as e:
         sys.stderr.write(f"ERROR: Unexpected error: {e}\n")
@@ -64,3 +67,4 @@ def main(hostname, port, filename):
 
 if __name__ == "__main__":
     main(sys.argv[1], sys.argv[2], sys.argv[3])
+
